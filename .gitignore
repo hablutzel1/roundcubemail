@@ -1,3 +1,6 @@
+# IDE files
+/.idea/
+
 # ignore files added to these directories
 logs/*
 temp/*
@@ -21,3 +24,6 @@ program/js/jquery.min.js
 program/js/jstz.min.js
 program/js/publickey.js
 program/js/tinymce/
+
+# External Git repositories
+/plugins/kolab_2fa
