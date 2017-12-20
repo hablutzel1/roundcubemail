@@ -12,8 +12,6 @@ class sie_authsetup extends rcube_plugin
         $this->add_hook('startup', array($this, 'load_kolab_2fa_i18_overrides'));
         $this->add_hook('ready', array($this, 'ready'));
         // Hooks required for interactions with 'password' plugin.
-        $this->add_hook('user_create', array($this, 'user_create'));
-        $this->add_hook('identity_create', array($this, 'identity_create'));
         $this->add_hook('password_change', array($this, 'password_change'));
         // Hooks required for interactions with 'kolab_2fa' plugin.
         $this->register_action('plugin.kolab-2fa', array($this, 'kolab_2fa_settings_view_override'));
@@ -62,25 +60,11 @@ class sie_authsetup extends rcube_plugin
     }
 
     //region Interactions with 'password' plugin.
-    function user_create($args)
-    {
-        // Here we just set a value in session and later in 'identity_create' we put it into user prefs because the user record doesn't exist yet as the current method executes.
-        $_SESSION['firstlogin_password_unchanged_tmp'] = true;
-    }
-
-    function identity_create($args)
-    {
-        if (isset($_SESSION['firstlogin_password_unchanged_tmp']) && $_SESSION['firstlogin_password_unchanged_tmp']) {
-            $rcmail = rcmail::get_instance();
-            $rcmail->user->save_prefs(array('firstlogin_password_unchanged' => true));
-            $rcmail->session->remove('firstlogin_password_unchanged_tmp');
-        }
-    }
-
     function password_change($args)
     {
         $rcmail = rcmail::get_instance();
         $userPrefs = $rcmail->user->get_prefs();
+        // 'firstlogin_password_unchanged' has been set during account activation in 'management' app.
         if (isset($userPrefs['firstlogin_password_unchanged']) && $userPrefs['firstlogin_password_unchanged']) {
             $rcmail = rcmail::get_instance();
             $userPrefs = $rcmail->user->get_prefs();
