@@ -1,5 +1,5 @@
 # WARNING: For PHP 7 the module name in the line below need to be modified!
-<IfModule mod_php5.c>
+<IfModule mod_php7.c>
 php_flag    display_errors  Off
 php_flag    log_errors      On
 # php_value    error_log    logs/errors
