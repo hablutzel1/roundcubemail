@@ -4,6 +4,11 @@
 // sie_authsetup messages.
 ////////////////
 $labels['2fa_required'] = "Se requiere establecer un segundo factor de autenticación antes de continuar.";
+$labels['clientcertificateunavailable'] = "No se presentó un certificado digital válido del DNIe (Perú).";
+$labels['authenticatedcitizennotregistered'] = "El ciudadano autenticado (DNI: $nid) con el DNIe (Perú) no posee una cuenta en el SIE.";
+$labels['clientcertificatelogout'] = "Advertencia: A continuación asegúrese de cerrar su navegador por completo para cerrar efectivamente la sesión iniciada con el DNIe.";
+$labels['ssllinktext'] = "Iniciar sesión con DNIe";
+$labels['ssllinkwarning'] = "Advertencia: El uso de esta alternativa de inicio de sesión en máquinas de uso compartido puede ser peligroso";
 
 ////////////////
 /// kolab_2fa overrides.

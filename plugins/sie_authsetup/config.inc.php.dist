@@ -1,0 +1,10 @@
+<?php
+
+$config['sie_authsetup_pn_username_prefix'] = 'dni_';
+
+// See https://wiki.dovecot.org/Authentication/MasterUsers.
+$config['sie_authsetup_dovecot_master_user_separator'] = '*';
+$config['sie_authsetup_dovecot_master_username'] = null;
+$config['sie_authsetup_dovecot_master_password'] = null;
+
+?>

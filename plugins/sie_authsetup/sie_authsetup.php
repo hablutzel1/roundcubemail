@@ -5,17 +5,27 @@
  */
 class sie_authsetup extends rcube_plugin
 {
+    private $sslLogin;
+
     function init()
     {
+        $this->load_config();
         // Loading current plugin i18n.
         $this->add_texts('localization/');
         $this->add_hook('startup', array($this, 'load_kolab_2fa_i18_overrides'));
+        $this->api->output->add_handler('loginform', array($this, 'login_form_with_ssl_login'));
+        $this->add_hook('authenticate', array($this, 'authenticate_with_mutual_ssl'));
+        $this->add_hook('storage_connect', array($this, 'dovecot_masteruser_login'));
         $this->add_hook('ready', array($this, 'ready'));
+        $this->add_hook('logout_after', array($this, 'logout_after'));
         // Hooks required for interactions with 'password' plugin.
         $this->add_hook('password_change', array($this, 'password_change'));
         // Hooks required for interactions with 'kolab_2fa' plugin.
         $this->register_action('plugin.kolab-2fa', array($this, 'kolab_2fa_settings_view_override'));
         $this->register_handler('plugin.factoradder', array($this, 'kolab_2fa_settings_factoradder_override'));
+        if (isset($_SESSION['sie_authsetup_ssllogin'])) { // We store this state in an attribute because only this way it will survive the fact that the session is killed before 'logout_after' is called.
+           $this->sslLogin = true;
+        }
     }
 
     public function load_kolab_2fa_i18_overrides($args)
@@ -23,6 +33,71 @@ class sie_authsetup extends rcube_plugin
         if ($args['task'] == 'login' || $this->_isKolab2FaSettingsAction($args)) {
             $this->_kolab2FaAddTexts();
         }
+    }
+
+    public function login_form_with_ssl_login($attrib = array())
+    {
+        $rcmail = rcmail::get_instance();
+        /** @var rcmail_output_html $output */
+        $output = $this->api->output;
+        $rcmail_output_htmlClass = new ReflectionClass($output);
+        $login_formMethod = $rcmail_output_htmlClass->getMethod('login_form');
+        $login_formMethod->setAccessible(true);
+        $out = $login_formMethod->invoke($output, $attrib);
+        $sslLoginUrl = $rcmail->url(array(
+            'task' => 'login',
+            'action' => 'login',
+            'ssllogin' => 1,
+        ));
+        $out .= \html::a(array("href" => $sslLoginUrl, 'style' => 'color: white; text-align: right; display: block;', 'title' => $this->gettext("ssllinkwarning")), $this->gettext("ssllinktext"));
+        return $out;
+    }
+
+    public function authenticate_with_mutual_ssl($args)
+    {
+        if (isset($_GET['_ssllogin'])) {
+            $rcmail = rcmail::get_instance();
+            $clientCert = $_SERVER['SSL_CLIENT_CERT'];
+            if (empty($clientCert)){
+                $args['abort'] = true;
+                $args['error'] = $this->gettext("clientcertificateunavailable");
+                return $args;
+            }
+            $clientCert = openssl_x509_read($clientCert);
+            $clientCert = openssl_x509_parse($clientCert);
+            $serialNumber = $clientCert['subject']['serialNumber'];
+            $serialNumber = explode(":", $serialNumber);
+            $nid = $serialNumber[1];
+            $args['user'] = $rcmail->config->get('sie_authsetup_pn_username_prefix', 'dni_') . $nid;
+            if (!(rcube_user::query($args['user'], $args['host']))) {
+                $args['error'] = str_replace('$nid', $nid ,$this->gettext('authenticatedcitizennotregistered'));
+                $args['abort'] = true;
+                return $args;
+            }
+
+            // Disable 2FA for this login session.
+            $rcmail = rcmail::get_instance();
+            $kolab2FaPlugin = $rcmail->plugins->get_plugin("kolab_2fa");
+            $kolab_2faClass = new ReflectionClass($kolab2FaPlugin);
+            $login_verifiedProperty = $kolab_2faClass->getProperty("login_verified");
+            $login_verifiedProperty->setAccessible(true);
+            $login_verifiedProperty->setValue($kolab2FaPlugin, true);
+
+            $_SESSION['sie_authsetup_ssllogin'] = true;
+            $this->sslLogin = true;
+        }
+        return $args;
+    }
+
+    function dovecot_masteruser_login($args) {
+        if ($this->sslLogin) {
+            $rcmail = rcmail::get_instance();
+            $separator = $rcmail->config->get('sie_authsetup_dovecot_master_user_separator', '*');
+            $masterUser = $rcmail->config->get('sie_authsetup_dovecot_master_username');
+            $args['user'] = $args['user'] . $separator . $masterUser;
+            $args['pass'] = $rcmail->config->get('sie_authsetup_dovecot_master_password');
+        }
+        return $args;
     }
 
     function ready($args)
@@ -33,30 +108,38 @@ class sie_authsetup extends rcube_plugin
         }
         $rcmail = rcmail::get_instance();
         $userPrefs = $rcmail->user->get_prefs();
-        if (isset($userPrefs['firstlogin_password_unchanged']) && $userPrefs['firstlogin_password_unchanged']) {
-            if (!($args['task'] == 'settings' &&
-                ($args['action'] == 'plugin.password' || $args['action'] == 'plugin.password-save'))) {
-                // Copied from \password::login_after.
-                $args['_task'] = 'settings';
-                $args['_action'] = 'plugin.password';
-                $args['_first'] = 'true';
-                $rcmail = rcmail::get_instance();
-                $url = $rcmail->url($args);
-                header('Location: ' . $url);
-            }
-        } else {
-            if (!$this->_isKolab2FaSettingsAction($args)) {
-                $rcmail = rcmail::get_instance();
-                $kolab2FaPlugin = $rcmail->plugins->get_plugin("kolab_2fa");
-                // We need to start up the plugin explicitely as it could have been filtered. See \kolab_2fa::$task.
-                $kolab2FaPlugin->startup(array('task' => null));
-                $registeredFactors = $this->_getFactorTypesRegisteredForCurrentUser($kolab2FaPlugin);
-                if (count($registeredFactors) == 0) {
-                    $this->_redirectTo2FA();
+        if (!$this->sslLogin) {
+            if (isset($userPrefs['firstlogin_password_unchanged']) && $userPrefs['firstlogin_password_unchanged']) {
+                if (!($args['task'] == 'settings' &&
+                    ($args['action'] == 'plugin.password' || $args['action'] == 'plugin.password-save'))) {
+                    // Copied from \password::login_after.
+                    $args['_task'] = 'settings';
+                    $args['_action'] = 'plugin.password';
+                    $args['_first'] = 'true';
+                    $rcmail = rcmail::get_instance();
+                    $url = $rcmail->url($args);
+                    header('Location: ' . $url);
+                }
+            } else {
+                if (!$this->_isKolab2FaSettingsAction($args)) {
+                    $rcmail = rcmail::get_instance();
+                    $kolab2FaPlugin = $rcmail->plugins->get_plugin("kolab_2fa");
+                    // We need to start up the plugin explicitely as it could have been filtered. See \kolab_2fa::$task.
+                    $kolab2FaPlugin->startup(array('task' => null));
+                    $registeredFactors = $this->_getFactorTypesRegisteredForCurrentUser($kolab2FaPlugin);
+                    if (count($registeredFactors) == 0) {
+                        $this->_redirectTo2FA();
+                    }
                 }
             }
         }
         return $args;
+    }
+
+    public function logout_after($args) {
+        if ($this->sslLogin) {
+            $this->api->output->show_message($this->gettext('clientcertificatelogout'), 'warning', null, true, PHP_INT_MAX);
+        }
     }
 
     //region Interactions with 'password' plugin.
@@ -71,7 +154,9 @@ class sie_authsetup extends rcube_plugin
             // TODO check if this user preference can be deleted, instead of just changing its value.
             $userPrefs['firstlogin_password_unchanged'] = false;
             $rcmail->user->save_prefs($userPrefs);
-            $this->_redirectTo2FA();
+            if (!$this->sslLogin) {
+                $this->_redirectTo2FA();
+            }
         }
     }
     //endregion
