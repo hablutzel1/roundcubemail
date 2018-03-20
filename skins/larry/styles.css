@@ -493,7 +493,8 @@ a.iconlink.upload {
 	font-weight: bold;
 	padding: 6px 30px 6px 25px;
 	display: inline-block;
-	white-space: nowrap;
+    /* TODO produce an appropriate Roundcube patch, maybe accompanied by a selenium test and then send a PR upstream. */
+	/*white-space: nowrap;*/
 	background: url(images/messages.png) 0 5px no-repeat;
 	cursor: default;
 }
