@@ -16,6 +16,7 @@ class sie_authsetup extends rcube_plugin
         $this->api->output->add_handler('loginform', array($this, 'login_form_with_ssl_login'));
         $this->add_hook('authenticate', array($this, 'authenticate_with_mutual_ssl'));
         $this->add_hook('storage_connect', array($this, 'dovecot_masteruser_login'));
+        $this->add_hook('managesieve_connect', array($this, 'dovecot_masteruser_login'));
         $this->add_hook('ready', array($this, 'ready'));
         $this->add_hook('logout_after', array($this, 'logout_after'));
         // Hooks required for interactions with 'password' plugin.
@@ -74,6 +75,7 @@ class sie_authsetup extends rcube_plugin
                 $args['abort'] = true;
                 return $args;
             }
+            $args['pass']  =  $rcmail->config->get('sie_authsetup_dovecot_master_password');
 
             // Disable 2FA for this login session.
             $rcmail = rcmail::get_instance();
@@ -95,7 +97,6 @@ class sie_authsetup extends rcube_plugin
             $separator = $rcmail->config->get('sie_authsetup_dovecot_master_user_separator', '*');
             $masterUser = $rcmail->config->get('sie_authsetup_dovecot_master_username');
             $args['user'] = $args['user'] . $separator . $masterUser;
-            $args['pass'] = $rcmail->config->get('sie_authsetup_dovecot_master_password');
         }
         return $args;
     }
