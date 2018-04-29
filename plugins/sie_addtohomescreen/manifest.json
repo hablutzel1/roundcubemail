@@ -1,0 +1,13 @@
+{
+  "short_name": "Dom. Electrónico",
+  "name": "SIE - Domicilio Electrónico",
+  "icons": [
+    {
+      "src": "launcher-icon-192x192.png",
+      "type": "image/png",
+      "sizes": "192x192"
+    }
+  ],
+  "start_url": "/",
+  "display": "standalone"
+}

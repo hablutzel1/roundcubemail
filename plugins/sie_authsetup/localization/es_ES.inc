@@ -12,6 +12,7 @@ $labels['ssllinkwarning'] = "Advertencia: El uso de esta alternativa de inicio d
 
 ////////////////
 /// kolab_2fa overrides.
+/// TODO evaluate to create my own fork of kolab_2fa plugin and move these there.
 ////////////////
 $kolab2FaLabels['settingslist'] = 'Aut. Multifactor';
 $kolab2FaLabels['settingstitle'] = 'Factores de autenticación';

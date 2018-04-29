@@ -27,3 +27,8 @@ program/js/tinymce/
 
 # External Git repositories
 /plugins/kolab_2fa
+/plugins/jquery_mobile
+/plugins/mobile
+/skins/melanie2_larry_mobile
+/plugins/melanie2_larry
+/skins/melanie2_larry

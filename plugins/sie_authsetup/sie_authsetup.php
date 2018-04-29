@@ -12,8 +12,7 @@ class sie_authsetup extends rcube_plugin
         $this->load_config();
         // Loading current plugin i18n.
         $this->add_texts('localization/');
-        $this->add_hook('startup', array($this, 'load_kolab_2fa_i18_overrides'));
-        $this->api->output->add_handler('loginform', array($this, 'login_form_with_ssl_login'));
+        $this->add_hook('startup', array($this, 'startup'));
         $this->add_hook('authenticate', array($this, 'authenticate_with_mutual_ssl'));
         $this->add_hook('storage_connect', array($this, 'dovecot_masteruser_login'));
         $this->add_hook('managesieve_connect', array($this, 'dovecot_masteruser_login'));
@@ -29,8 +28,10 @@ class sie_authsetup extends rcube_plugin
         }
     }
 
-    public function load_kolab_2fa_i18_overrides($args)
+    public function startup($args)
     {
+        $this->api->output->add_handler('loginform', array($this, 'login_form_with_ssl_login'));
+
         if ($args['task'] == 'login' || $this->_isKolab2FaSettingsAction($args)) {
             $this->_kolab2FaAddTexts();
         }
@@ -45,12 +46,16 @@ class sie_authsetup extends rcube_plugin
         $login_formMethod = $rcmail_output_htmlClass->getMethod('login_form');
         $login_formMethod->setAccessible(true);
         $out = $login_formMethod->invoke($output, $attrib);
-        $sslLoginUrl = $rcmail->url(array(
-            'task' => 'login',
-            'action' => 'login',
-            'ssllogin' => 1,
-        ));
-        $out .= \html::a(array("href" => $sslLoginUrl, 'style' => 'color: white; text-align: right; display: block;', 'title' => $this->gettext("ssllinkwarning")), $this->gettext("ssllinktext"));
+        $rcmail = rcmail::get_instance();
+        $mobilePlugin = $rcmail->plugins->get_plugin("mobile");
+        if (!$mobilePlugin->isMobile()) { // Currently not supporting eID authentication from mobile devices.
+            $sslLoginUrl = $rcmail->url(array(
+                'task' => 'login',
+                'action' => 'login',
+                'ssllogin' => 1,
+            ));
+            $out .= \html::a(array("href" => $sslLoginUrl, 'style' => 'text-align: right; display: block;', 'title' => $this->gettext("ssllinkwarning")), $this->gettext("ssllinktext"));
+        }
         return $out;
     }
 
