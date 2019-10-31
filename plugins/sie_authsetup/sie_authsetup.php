@@ -72,6 +72,7 @@ class sie_authsetup extends rcube_plugin
             $clientCert = openssl_x509_read($clientCert);
             $clientCert = openssl_x509_parse($clientCert);
             $serialNumber = $clientCert['subject']['serialNumber'];
+            // TODO confirm the actual separator in the peruvian eID. I think that sometime I observed that a '-' was used. Note that there might be several eID versions with different certificate profiles.
             $serialNumber = explode(":", $serialNumber);
             $nid = $serialNumber[1];
             $args['user'] = $rcmail->config->get('sie_authsetup_pn_username_prefix', 'dni_') . $nid;

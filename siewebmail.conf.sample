@@ -1,0 +1,38 @@
+# TODO identify the Apache version required.
+<VirtualHost *:80>
+    ServerName  webmail.example.org
+    RewriteEngine On
+    RewriteCond %{HTTPS} off
+    RewriteRule (.*) https://%{HTTP_HOST}%{REQUEST_URI}
+</VirtualHost>
+
+<IfModule mod_ssl.c>
+    <VirtualHost *:443>
+        ServerName  webmail.example.org
+        DocumentRoot /opt/sie/siewebmail
+
+        <Directory /opt/sie/siewebmail>
+            # TODO check if "AllowOverride all" is really required by Roundcube.
+            AllowOverride all
+            Require all granted
+        </Directory>
+
+        SSLEngine on
+        # TODO check: isn't it more correct to use chain.pem?.
+        SSLCertificateFile	/etc/letsencrypt/live/example.org/fullchain.pem
+        SSLCertificateKeyFile /etc/letsencrypt/live/example.org/privkey.pem
+        # For production, only the DNIe CAs should be allowed because only for them we have the certainty that 2FA is appropriately being managed. TODO ensure not be allowing other (possibly software based) RENIEC hierarchies.
+        # Test CAs should only be enabled for development.
+        SSLCACertificateFile /etc/ssl/certs/SIE_webmail_trustedanchors.pem
+
+        <Location />
+            # Ask for a client certificate only for an specific URL.
+            # TODO put the full query string.
+            <If "%{QUERY_STRING} =~ /.*ssllogin.*/" >
+            SSLVerifyClient optional
+            SSLVerifyDepth 2
+            SSLOptions +ExportCertData
+            </If>
+        </Location>
+    </VirtualHost>
+</IfModule>
