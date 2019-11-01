@@ -12,6 +12,9 @@
             "url": "https://git.kolab.org/diffusion/PNL/php-net_ldap.git"
         }
     ],
+    "_comment": "TODO determine if the updates made over the original version of this file are really required.",
+    "_comment": "FIXME about spomky-labs/otphp: note that it doesn't match the version specified in plugins/kolab_2fa/composer.json, but it does match the version being used in a Kolab server previously installed. Note that that with ~5.0.0 the error will be at \\OTPHP\\TOTP::verify where a === comparison will be tried between an integer an a string.",
+    "_comment": "TODO check: original endroid/qrcode version was ~1.6.5. Research why this version got reduced.",
     "require": {
         "php": ">=5.4.0",
         "pear/pear-core-minimal": "~1.10.1",
@@ -23,13 +26,15 @@
         "pear/crypt_gpg": "~1.6.0",
         "pear/net_sieve": "~1.4.0",
         "roundcube/plugin-installer": "~0.1.6",
-        "endroid/qrcode": "~1.6.5"
+        "endroid/qrcode": "~1.5.0",
+        "kolab/Net_LDAP3": "dev-master",
+        "spomky-labs/otphp": "4.0.2",
+        "enygma/yubikey": "~3.2"
     },
     "require-dev": {
         "phpunit/phpunit": "^4.8.36 || ^5.7.15"
     },
     "suggest": {
-        "pear/net_ldap2": "~2.2.0 required for connecting to LDAP",
-        "kolab/Net_LDAP3": "dev-master required for connecting to LDAP"
+        "pear/net_ldap2": "~2.2.0 required for connecting to LDAP"
     }
 }
