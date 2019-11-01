@@ -25,7 +25,7 @@ $config = array();
 // For examples see http://pear.php.net/manual/en/package.database.mdb2.intro-dsn.php
 // NOTE: for SQLite use absolute path (Linux): 'sqlite:////full/path/to/sqlite.db?mode=0646'
 //       or (Windows): 'sqlite:///C:/full/path/to/sqlite.db'
-$config['db_dsnw'] = 'mysql://roundcube:pass@localhost/roundcubemail';
+$config['db_dsnw'] = 'mysql://sie:@127.0.0.1/sie_roundcube';
 
 // The IMAP host chosen to perform the log-in.
 // Leave blank to show a textbox at login, give a list of hosts
@@ -37,7 +37,7 @@ $config['db_dsnw'] = 'mysql://roundcube:pass@localhost/roundcubemail';
 // %d - domain (http hostname $_SERVER['HTTP_HOST'] without the first part)
 // %s - domain name after the '@' from e-mail address provided at login screen
 // For example %n = mail.domain.tld, %t = domain.tld
-$config['default_host'] = 'localhost';
+$config['default_host'] = 'example.org';
 
 // SMTP server host (for sending mails).
 // Enter hostname with prefix tls:// to use STARTTLS, or use
@@ -65,10 +65,10 @@ $config['smtp_pass'] = '%p';
 
 // provide an URL where a user can get support for this Roundcube installation
 // PLEASE DO NOT LINK TO THE ROUNDCUBE.NET WEBSITE HERE!
-$config['support_url'] = '';
+$config['support_url'] = 'http://www.inversionesrc.com/contact.html';
 
 // Name your service. This is displayed on the login screen and in the window title
-$config['product_name'] = 'Roundcube Webmail';
+$config['product_name'] = 'SIE - Domicilio Electrónico';
 
 // this key is used to encrypt the users imap password which is stored
 // in the session record (and the client cookie if remember password is enabled).
@@ -77,10 +77,21 @@ $config['product_name'] = 'Roundcube Webmail';
 $config['des_key'] = 'rcmail-!24ByteDESkey*Str';
 
 // List of active plugins (in plugins/ directory)
-$config['plugins'] = array(
-    'archive',
-    'zipdownload',
-);
+// TODO confirm the fact that it is required that 'sie_authsetup' goes after 'password' and 'kolab_2fa' and let a note.
+$config['plugins'] = array('melanie2_larry', 'mobile', 'sie_addtohomescreen',  'managesieve', 'password', 'kolab_2fa', 'sie_authsetup');
 
 // skin name: folder from skins/
-$config['skin'] = 'larry';
+$config['skin'] = 'melanie2_larry';
+
+$config['enable_spellcheck'] = false;
+
+$config['htmleditor'] = 1;
+
+$config['identities_level'] = 4;
+
+// For development only (required to override the hardcoded 'E_ALL & ~E_NOTICE & ~E_STRICT' in program/lib/Roundcube/bootstrap.php:28)
+// TODO determine if there is any other place to override the 'error_reporting' value, e.g. a mechanism to set php.ini properties with something like $config['ini_set']['xxx'].
+//ini_set("error_reporting", E_ALL);
+
+// TODO evaluate to disable the possibility that Roundcube users are automatically created, e.g. from existing Linux users. This is to prevent inconsistencies between user credentials, e.g. some users with  2FA and others without it... although 2FA setup would be required for them the first time they log in, isn't it?. A better reason would be to avoid inconsistencies between the types of usernames and their legal implications, e.g. dni_20202020 vs jperez.
+
