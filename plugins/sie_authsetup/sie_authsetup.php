@@ -145,7 +145,7 @@ class sie_authsetup extends rcube_plugin
 
     public function logout_after($args) {
         if ($this->sslLogin) {
-            $this->api->output->show_message($this->gettext('clientcertificatelogout'), 'warning', null, true, PHP_INT_MAX);
+            $this->api->output->show_message($this->gettext('clientcertificatelogout'), 'warning', null, true, -1);
         }
     }
 
