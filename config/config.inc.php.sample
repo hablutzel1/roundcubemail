@@ -95,3 +95,5 @@ $config['identities_level'] = 4;
 
 // TODO evaluate to disable the possibility that Roundcube users are automatically created, e.g. from existing Linux users. This is to prevent inconsistencies between user credentials, e.g. some users with  2FA and others without it... although 2FA setup would be required for them the first time they log in, isn't it?. A better reason would be to avoid inconsistencies between the types of usernames and their legal implications, e.g. dni_20202020 vs jperez.
 
+// Keep it always commented in production deployments.
+// $config['enable_installer'] = true;
