@@ -1,7 +1,7 @@
 <?php
 
 /**
- * This plugin has been tested with 'kolab_2fa' rev. ab9f33f from https://git.kolab.org/diffusion/RPK/. TODO check if we could jump to an stable 'kolab_2fa' version.
+ * This plugin has been tested with 'kolab_2fa' rev. ab9f33fb (see https://inversionesrc.atlassian.net/wiki/x/HoAvKg#SIE-Installation-kolab_2fa_installation) from https://git.kolab.org/diffusion/RPK/. TODO check if we could jump to an stable 'kolab_2fa' version.
  */
 class sie_authsetup extends rcube_plugin
 {
