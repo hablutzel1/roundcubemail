@@ -78,7 +78,7 @@ $config['des_key'] = 'rcmail-!24ByteDESkey*Str';
 
 // List of active plugins (in plugins/ directory)
 // TODO confirm the fact that it is required that 'sie_authsetup' goes after 'password' and 'kolab_2fa' and let a note.
-$config['plugins'] = array('melanie2_larry', 'mobile', 'sie_addtohomescreen',  'managesieve', 'password', 'kolab_2fa', 'sie_authsetup');
+$config['plugins'] = array('melanie2_larry', 'mobile', 'sie_addtohomescreen',  'managesieve', 'password', 'kolab_2fa', 'sie_authsetup', 'sie_preferences');
 
 // skin name: folder from skins/
 $config['skin'] = 'melanie2_larry';
