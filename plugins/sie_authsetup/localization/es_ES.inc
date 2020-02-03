@@ -34,3 +34,4 @@ $kolab2FaLabels['factorsavesuccess'] = 'Factor de autenticación guardado correc
 $kolab2FaLabels['factorremovesuccess'] = 'Factor de autenticación eliminado correctamente';
 $kolab2FaLabels['codeverificationfailed'] = 'El código de verificación $method falló';
 $kolab2FaLabels['continue'] = 'Continuar';
+$kolab2FaLabels['verifycodemissing'] = 'Por favor ingrese el código de verificación de su dispositivo';
