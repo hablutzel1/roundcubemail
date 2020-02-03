@@ -4,6 +4,8 @@
 
 window.rcmail && rcmail.addEventListener('init', function(args) { 
     rcmail.register_command('plugin.activate', function() {rcmail.activate()}, true);
+    rcmail.register_command('plugin.resetpassword', function() {rcmail.resetpassword()}, true);
+
     $('#linkcode').click(function(e) {
         e.preventDefault();
         $('#_secret').show();
@@ -35,3 +37,10 @@ rcube_webmail.prototype.copyToClipboard = function(text)
     setTimeout(() => alert(rcmail.gettext('alreadycopied','sie_user_support')), 50);
 }
 
+rcube_webmail.prototype.resetpassword = function()
+{
+    $("#_resetpasswordbutton").attr('disabled','disabled');
+    $("#message").empty()
+    rcmail.set_busy(true, 'loading');
+    rcmail.gui_objects.resetpasswordform.submit();
+}

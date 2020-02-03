@@ -21,6 +21,7 @@ class sie_user_support extends rcube_plugin
         $this->add_hook('ready', array($this, 'ready'));
         $this->register_handler('plugin.activationform', array($this, 'activation_form'));
         $this->register_handler('plugin.tos', array($this,'tos_content'));
+        $this->register_handler('plugin.resetpasswordform', array($this, 'reset_password_form'));
     }
 
     function startup($args)
@@ -30,7 +31,7 @@ class sie_user_support extends rcube_plugin
 
         $this->include_stylesheet($this->local_skin_path() . '/sie_user_support.css');
         // kill active session
-        if ($args['action'] == 'plugin.activation' && !empty($rcmail->user->ID)) {
+        if (($args['action'] == 'plugin.activation' || $args['action'] == 'plugin.resetpassword') && !empty($rcmail->user->ID)) {
             $rcmail->kill_session();
             header('Location: ' . $_SERVER['REQUEST_URI']);
         } elseif ($args['action'] == 'plugin.activation') {
@@ -49,6 +50,20 @@ class sie_user_support extends rcube_plugin
             $rcmail->output->send('sie_user_support.invalidrequest');
         } elseif ($args['action'] == 'plugin.termsofservice') {
             $rcmail->output->send('sie_user_support.termsofservice');
+        } elseif ($args['action'] == 'plugin.resetpassword') {
+            $username = $_GET['_username'];
+            $token = $_GET['_token'];
+            $this->syncUser($username);
+            if ($this->user && $this->validateResetPasswordRequest($this->user, $token)) {
+                if ($method == 'GET') { // show reset password form
+                    $_SESSION['resetpassword_username'] = $username;
+                    $rcmail->output->send('sie_user_support.resetpassword');
+                } elseif ($method == 'POST' && isset($_SESSION['resetpassword_username'])) { // reset password
+                    $this->reset_password($args);
+                    return $args;
+                }
+            }
+            $rcmail->output->send('sie_user_support.invalidrequest');
         }
     }
 
@@ -220,9 +235,11 @@ class sie_user_support extends rcube_plugin
             $rcmail->output->command('display_message', $this->gettext('tosnotaccepted'), 'error');
         } else {
             $username = $this->user->get_username();
+            // NOTE that this requires sudoers configuration for 'www-data' user.
+            // TODO check: my Ubuntu desktop login manager still displays the users created like this in the login menu. Check how to avoid them to be displayed there, maybe by creating them like system users?. But system users doesn't make too much sense in this context really.
             $command = "sudo /usr/sbin/useradd -m -s /usr/sbin/nologin -p `openssl passwd -1 " . escapeshellarg($newpwd) . "` " . escapeshellarg($username) . " 2>&1";
             exec($command, $output, $return_var);
-            if ($return_var != 0) {
+            if ($return_var != 0) { // Any error
                 rcube::write_log('errors', sprintf('Plugin sie_user_support: Unexpected problem creating user account %s', $username));
             } else {
                 $kolab2FaPlugin = $this->getKolab2FAPluginInstance();
@@ -373,5 +390,90 @@ class sie_user_support extends rcube_plugin
         $out = file_get_contents($this->home . '/resources/' . $filename);
         $rcmail->output->add_gui_object('tos', 'tos-content');
         return $out;
+    }
+
+    function reset_password_form()
+    {
+        $rcmail = rcmail::get_instance();
+        $input_password = new html_passwordfield(array(
+            'name' => '_password',
+            'id' => '_password',
+            'size' => 30,
+        ));
+        $out .= html::div(array(
+            'class' => 'form-group'
+        ), html::label('_password',rcube::Q($this->gettext('password'))) . $input_password->show());
+
+        $input_confirmpassword = new html_passwordfield(array(
+            'name' => '_confirmpassword',
+            'id' => '_confirmpassword',
+            'size' => 30,
+        ));
+        $out .= html::div(array(
+            'class' => 'form-group'
+        ), html::label('_confirmpassword',rcube::Q($this->gettext('confirmpassword'))) . $input_confirmpassword->show());
+
+        $out .= html::div(array('id' => 'message', 'name' => 'message'));
+        $submit_button = $rcmail->output->button(array(
+            'command' => 'plugin.resetpassword',
+            'type' => 'input',
+            'class' => 'button mainaction',
+            'value' => $this->gettext('resetpassword'),
+            'id' => '_resetpasswordbutton'
+        ));
+        $out .= $submit_button;
+
+        $rcmail->output->add_gui_object('resetpasswordform', 'resetpassword-form');
+
+        $this->include_script('sie_user_support.js');
+        return $rcmail->output->form_tag(array(
+            'id' => 'resetpassword-form',
+            'name' => 'resetpassword-form',
+            'method' => 'post',
+            'action' => '.' . $_SERVER['REQUEST_URI']
+        ), $out);
+    }
+
+    function reset_password(&$args)
+    {
+        $newpwd = rcube_utils::get_input_value('_password', rcube_utils::INPUT_POST);
+        $conpwd = rcube_utils::get_input_value('_confirmpassword', rcube_utils::INPUT_POST);
+
+        $rcmail = rcmail::get_instance();
+        if (($message = $this->validatePassword($newpwd, $conpwd, '', true)) !== null) {
+            $rcmail->output->command('display_message', $message, 'error');
+        } else {
+            $_SESSION['username'] = $this->user->get_username();
+            $plugin_password = $rcmail->plugins->get_plugin("password");
+            $plugin_passwordClass = new ReflectionClass($plugin_password);
+            $_saveMethod = $plugin_passwordClass->getMethod('_save');
+            $_saveMethod->setAccessible(true);
+            $message = $plugin_password->gettext('internalerror');
+            if (!($message = $_saveMethod->invoke($plugin_password, '', $newpwd))) {
+                $data = array(
+                    'resetpassword_token' => null,
+                    'resetpassword_token_created_at' => null
+                );
+                if ($this->user->save_prefs($data)) {
+                    // Login after change password showing 2fa step
+                    $args['task'] = 'login';
+                    $args['action'] = 'login';
+                    $_POST['_user'] = $this->user->get_username();
+                    $_POST['_pass'] = $newpwd;
+                    return;
+                }
+            }
+            $rcmail->output->command('display_message', $message, 'error');
+        }
+        $rcmail->output->send('sie_user_support.resetpassword');
+    }
+
+    private function validateResetPasswordRequest($user, $token)
+    {
+        $curTime = time();
+        $maxAge = 24 * 60 * 60; // 24 hours.
+        $preferences = $user->get_prefs();
+        $valid =  isset($preferences['resetpassword_token']) && $preferences['resetpassword_token'] == $token && $curTime - $preferences['resetpassword_token_created_at'] <= $maxAge;
+        return $valid;
     }
 }

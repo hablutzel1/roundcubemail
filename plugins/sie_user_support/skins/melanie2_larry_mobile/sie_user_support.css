@@ -1,5 +1,5 @@
 body {
-	font-family: "Lucida Grande",Verdana,Arial,Helvetica,sans-serif;
+    font-family: "Lucida Grande",Verdana,Arial,Helvetica,sans-serif;
     font-size: 13px;
     color: #333333;
     background-color: #E9E9E9;
@@ -41,7 +41,7 @@ ol.ol-letter li:before{
     font-size: 1.5rem;
     margin-top: 0;
 }
-.panel{    
+.panel{
     margin: 20px auto;
     background-color: #FFFFFF;
     border: 1px solid #BCBCBC;
@@ -90,6 +90,7 @@ ol.ol-letter li:before{
 }
 #invalidrequest{
     margin-top: 5%;
+    text-align: center;
 }
 #bottomline{
     text-align: center;

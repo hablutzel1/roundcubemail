@@ -7,7 +7,12 @@
     <body>
         <div>
             <div class="panel" id="invalidrequest">
-                <roundcube:label name="sie_user_support.invalidactivationurl" />
+                <roundcube:if condition="request:_action == 'plugin.activation'" />
+                    <roundcube:label name="sie_user_support.invalidactivationurl" />
+                <roundcube:endif />
+                <roundcube:if condition="request:_action == 'plugin.resetpassword'" />
+                    <roundcube:label name="sie_user_support.invalidresetpasswordurl" />
+                <roundcube:endif />
             </div>
             <div id="bottomline">
                 <roundcube:var name="config:product_name"> <roundcube:object name="version" condition="config:display_version" />
