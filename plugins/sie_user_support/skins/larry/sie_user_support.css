@@ -1,0 +1,96 @@
+body {
+	font-family: "Lucida Grande",Verdana,Arial,Helvetica,sans-serif;
+    font-size: 13px;
+    color: #333333;
+    background-color: #E9E9E9;
+    margin: 0;
+}
+form .button{
+    margin-top: 10px;
+}
+ol.ol-num{
+    list-style: none;
+    counter-reset: number-counter;
+}
+ol.ol-num li{
+    counter-increment: number-counter;
+    position: relative;
+    margin-bottom: 3px;
+}
+ol.ol-num li:before{
+    content: counter(number-counter) ") ";
+    position: absolute;
+    left: -25px;
+}
+ol.ol-letter{
+    list-style: none;
+    counter-reset: letter-counter;
+}
+ol.ol-letter li{
+    counter-increment: letter-counter;
+    position: relative;
+    margin-bottom: 3px;
+}
+ol.ol-letter li:before{
+    content: counter(letter-counter, lower-alpha) ") ";
+    position: absolute;
+    left: -25px;
+}
+.main-title {
+    text-align: center;
+    font-size: 1.5rem;
+    margin-top: 0;
+}
+.panel{    
+    margin: 20px auto;
+    background-color: #FFFFFF;
+    border: 1px solid #BCBCBC;
+    border-radius: 0.25rem;
+    padding: 25px;
+    max-width: 600px;
+    width: 80%;
+}
+.panel .panel-body{
+    padding: 10px;
+}
+.form-group{
+    margin-bottom: 1rem;
+}
+.form-group input[type='text'], input[type='password']{
+    display: block;
+    max-width: 100%;
+}
+.form-group label{
+    display: block;
+    margin-bottom: .5rem;
+    font-weight: 700;
+}
+#tos{
+    max-width: 870px;
+    width: 90%;
+}
+#tos.panel{
+    padding: 30px;
+    box-sizing: border-box;
+}
+#tos p, #tos li, .text-justify{
+    text-align: justify;
+}
+#tos h2{
+    margin-bottom: 0;
+}
+#tos table td{
+    padding: 5px;
+    vertical-align: top;
+}
+#tos h1{
+    font-size: 1.57rem;
+    font-weight: bold;
+    text-decoration: underline;
+}
+#invalidrequest{
+    margin-top: 5%;
+}
+#bottomline{
+    text-align: center;
+}

@@ -1,0 +1,4 @@
+<?php
+// name of the html file that contains the terms of service (save the file in the /resources folder).
+$config['sie_user_support_tos_content'] = 'default.html';
+?>
